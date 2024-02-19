@@ -19,19 +19,30 @@ public class Character
     }
 
     // Methods
-    public void Attack()
+    public virtual void Attack(Character target)
     {
-        // Implementation for character attack
+        int damage = AttackPower - target.Defense;
+        if (damage < 0)
+            damage = 0;
+
+        target.TakeDamage(damage);
+        Console.WriteLine($"{Name} attacks {target.Name} for {damage} damage.");
     }
 
-    public void Defend()
+    public virtual void Defend()
     {
         // Implementation for character defend
+        Console.WriteLine($"{Name} defends against the attack.");
     }
 
     public void TakeDamage(int damage)
     {
         // Implementation for character take damage
+        Health -= damage;
+        if (Health < 0)
+            Health = 0;
+
+        Console.WriteLine($"{Name} takes {damage} damage. Remaining health: {Health}");
     }
 }
 
@@ -44,6 +55,7 @@ public class Warrior : Character
     {
         // Additional constructor logic for Warrior class
     }
+
     // Additional methods or overrides specific to Warrior class
 }
 
@@ -55,6 +67,7 @@ public class Mage : Character
     {
         // Additional constructor logic for Mage class
     }
+
     // Additional methods or overrides specific to Mage class
 }
 
@@ -66,41 +79,34 @@ public class Rogue : Character
     {
         // Additional constructor logic for Rogue class
     }
+
     // Additional methods or overrides specific to Rogue class
 }
 
 // Enemy class
-public class Enemy
+public class Enemy : Character
 {
-    // Properties
-    public string Name { get; set; }
-    public int Health { get; set; }
-    public int AttackPower { get; set; }
-    public int Defense { get; set; }
-
     // Constructor
     public Enemy(string name, int health, int attackPower, int defense)
+        : base(name, health, attackPower, defense)
     {
-        Name = name;
-        Health = health;
-        AttackPower = attackPower;
-        Defense = defense;
     }
 
     // Methods
-    public void Attack()
+    public override void Attack(Character target)
     {
-        // Implementation for enemy attack
+        int damage = AttackPower - target.Defense;
+        if (damage < 0)
+            damage = 0;
+
+        target.TakeDamage(damage);
+        Console.WriteLine($"{Name} attacks {target.Name} for {damage} damage.");
     }
 
-    public void Defend()
+    public override void Defend()
     {
         // Implementation for enemy defend
-    }
-
-    public void TakeDamage(int damage)
-    {
-        // Implementation for enemy take damage
+        Console.WriteLine($"{Name} defends against the attack.");
     }
 }
 
@@ -108,20 +114,39 @@ public class Enemy
 public class Battle
 {
     // Methods
-    public void StartBattle(Character player, Enemy enemy)
+    public void StartBattle(Character player, Character enemy)
     {
         // Implementation for starting a battle
+        Console.WriteLine($"A battle starts between {player.Name} and {enemy.Name}!");
+
+        while (player.Health > 0 && enemy.Health > 0)
+        {
+            player.Attack(enemy);
+            if (enemy.Health <= 0)
+            {
+                Console.WriteLine($"{enemy.Name} has been defeated!");
+                break;
+            }
+
+            enemy.Attack(player);
+            if (player.Health <= 0)
+            {
+                Console.WriteLine($"{player.Name} has been defeated!");
+                break;
+            }
+        }
     }
 
     public void EndBattle()
     {
         // Implementation for ending a battle
+        Console.WriteLine("The battle has ended.");
     }
 
-    public bool CheckVictory(Character player, Enemy enemy)
+    public bool CheckVictory(Character player, Character enemy)
     {
         // Implementation for checking victory condition
-        return false; // Placeholder return value
+        return player.Health > 0 && enemy.Health <= 0;
     }
 }
 
@@ -170,24 +195,42 @@ public class Game
         Console.Write("Choose your character: ");
         int choice = Convert.ToInt32(Console.ReadLine());
 
+        Battle battle = new Battle(); // Create an instance of the Battle class
         switch (choice)
         {
             case 1:
-                // Create a Warrior character
-                // Start the game
+                Warrior playerWarrior = new Warrior("Warrior", 100, 20, 10);
+                battle.StartBattle(playerWarrior, GenerateEnemy()); // Call StartBattle from the Battle instance
                 break;
             case 2:
-                // Create a Mage character
-                // Start the game
+                Mage playerMage = new Mage("Mage", 80, 25, 5);
+                battle.StartBattle(playerMage, GenerateEnemy()); // Call StartBattle from the Battle instance
                 break;
             case 3:
-                // Create a Rogue character
-                // Start the game
+                Rogue playerRogue = new Rogue("Rogue", 90, 15, 15);
+                battle.StartBattle(playerRogue, GenerateEnemy()); // Call StartBattle from the Battle instance
                 break;
             default:
                 Console.WriteLine("Invalid choice. Please try again.");
                 CharacterSelection();
                 break;
+        }
+    }
+
+    private Enemy GenerateEnemy()
+    {
+        Random rand = new Random();
+        int enemyType = rand.Next(1, 4);
+        switch (enemyType)
+        {
+            case 1:
+                return new Enemy("Goblin", 50, 10, 5);
+            case 2:
+                return new Enemy("Orc", 70, 15, 8);
+            case 3:
+                return new Enemy("Dragon", 100, 25, 15);
+            default:
+                return new Enemy("Skeleton", 40, 8, 3);
         }
     }
 }
